@@ -37,6 +37,7 @@ def register():
         return redirect(url_for('home'))
     return render_template('register.html', title='Register', form=form)
 
+#TODO: Sloziti flash poruku, https://youtu.be/UIJKdCIEXUQ?t=42m10s
 @app.route('/login')
 def login():
     form = LoginForm()
