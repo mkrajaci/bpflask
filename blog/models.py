@@ -1,6 +1,8 @@
-from app import db
 from datetime import datetime
-#TODO: https://youtu.be/44PvX0Yv368?t=3m22s
+from __main__ import db
+
+#TODO: https://youtu.be/44PvX0Yv368?t=16m3s
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)    # nullable znaci da je obavezno polje
