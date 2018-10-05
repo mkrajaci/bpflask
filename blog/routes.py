@@ -1,8 +1,8 @@
-from flask import render_template, url_for, flash, redirect
+from flask import render_template, url_for, flash, redirect, request
 from blog import app, db, bcrypt
 from blog.forms import RegistrationForm, LoginForm
 from blog.models import User, Post
-from flask_login import login_user, current_user, logout_user
+from flask_login import login_user, current_user, logout_user, login_required
 
 posts = [
     {
@@ -52,14 +52,21 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
-            return redirect(url_for('home'))
+            next_page = request.args.get('next')    # dodavanje preusmjeravanja na posebnu stranicu nakon uspješnog logina, može biti stranica user-a itd.
+            return redirect(next_page) if next_page else redirect(url_for('home'))  # preusmjeravanje na next page, ako sam pokušavao uči na nju a potreban je login, ili idi na home
         else:
             flash('Login unsuccessful. Please check email and password')
     return render_template('login.html', title='Login', form=form)
 
 @app.route('/logout')
-def login():
+def logout():
     logout_user()
     return redirect(url_for('home'))
 
-#TODO: https://youtu.be/CSHx6eCkmv0?t=34m36s
+@app.route('/account')
+@login_required     # dodavanje restrikcije koja uvjetuje da je login izvršen
+def account():
+
+    return render_template('account.html', title='Account')
+
+#TODO: https://youtu.be/803Ei2Sq-Zs?t=6
