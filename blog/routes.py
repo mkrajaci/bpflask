@@ -1,6 +1,8 @@
+import os
+import secrets
 from flask import render_template, url_for, flash, redirect, request
 from blog import app, db, bcrypt
-from blog.forms import RegistrationForm, LoginForm
+from blog.forms import RegistrationForm, LoginForm, UpdateAccountForm
 from blog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -63,10 +65,36 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
-@app.route('/account')
+def save_picture(form_picture):
+    """
+    Preimenujem ime uploadane slike kako bi ime koje spremam u bazu bilo jedinstveno
+    :param form_picture:
+    :return: vraća ime slike
+    """
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)  # funkcija vraća dvije vrijednosti, a pošto ne koristim prvu nazvao sam je '_' da se editor ne buni kako nije korištena nigdje u kodu
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+    form_picture.save(picture_path)
+    return picture_fn
+
+@app.route('/account', methods=['get', 'post'])
 @login_required     # dodavanje restrikcije koja uvjetuje da je login izvršen
 def account():
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        if form.picture.data:
+            #picture_file = save_picture(form.picture.data)
+            current_user.image_file = save_picture(form.picture.data)
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated')
+        return redirect(url_for('account'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+    return render_template('account.html', title='Account', image_file=image_file, form=form)
 
-    return render_template('account.html', title='Account')
-
-#TODO: https://youtu.be/803Ei2Sq-Zs?t=6
+#TODO: https://youtu.be/803Ei2Sq-Zs?t=2072
